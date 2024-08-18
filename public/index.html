@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Start Browser</title>
+</head>
+<body>
+  <h1>Start Puppeteer Browser</h1>
+  <button id="startButton">Start Browser</button>
+  <p id="status"></p>
+
+  <script>
+    document.getElementById('startButton').addEventListener('click', () => {
+      fetch('/start-browser')
+        .then(response => response.text())
+        .then(text => {
+          document.getElementById('status').innerText = text;
+        })
+        .catch(error => {
+          console.error('Error:', error);
+        });
+    });
+  </script>
+</body>
+</html>
