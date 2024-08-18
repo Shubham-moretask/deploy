@@ -69,8 +69,7 @@
 
 
 
-
-FROM ghcr.io/puppeteer/puppeteer:23.1.0
+FROM ghcr.io/puppeteer/puppeteer:22.12.1
 
 USER root
 
@@ -81,14 +80,19 @@ RUN apt-get update && apt-get install -y \
     x11vnc \
     websockify \
     dbus-x11 \
+    dbus \
     && rm -rf /var/lib/apt/lists/*
+
+# Create and set up the machine-id file
+RUN dbus-uuidgen > /etc/machine-id
 
 # Clone noVNC to enable browser access through VNC over HTTP
 RUN git clone https://github.com/novnc/noVNC.git /usr/share/novnc
 
 # Set environment variables for Puppeteer
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
-    PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome-stable
+    PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome-stable \
+    DISPLAY=:99
 
 WORKDIR /usr/src/app
 
@@ -100,7 +104,7 @@ COPY . .
 # Start Fluxbox, Xvfb, x11vnc, and websockify for VNC access via noVNC
 CMD fluxbox & \
     Xvfb :99 -screen 0 1920x1080x24 & \
-    export DISPLAY=:99 && \
+    dbus-daemon --system --fork & \
     x11vnc -display :99 -nopw -forever & \
     websockify -D --web=/usr/share/novnc/ 8080 localhost:5900 & \
     node index.js
