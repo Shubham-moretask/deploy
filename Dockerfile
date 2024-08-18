@@ -66,24 +66,26 @@
 # # Start the script with Xvfb
 # CMD ["xvfb-run", "-a", "--server-args=-screen 0 1920x1080x24", "node", "index.js"]
 
+
+
+
+
 FROM ghcr.io/puppeteer/puppeteer:23.1.0
 
 USER root
 
-# Install necessary dependencies including Xvfb, Fluxbox, x11vnc, websockify, and git
+# Install necessary dependencies including Xvfb, Fluxbox, x11vnc, and websockify
 RUN apt-get update && apt-get install -y \
     xvfb \
     fluxbox \
     x11vnc \
     websockify \
-    git \
+    dbus-x11 \
     && rm -rf /var/lib/apt/lists/*
 
 # Clone noVNC to enable browser access through VNC over HTTP
 RUN git clone https://github.com/novnc/noVNC.git /usr/share/novnc
 
-# Switch back to the original non-root user
-USER pptruser
 # Set environment variables for Puppeteer
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
     PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome-stable
@@ -97,7 +99,8 @@ COPY . .
 
 # Start Fluxbox, Xvfb, x11vnc, and websockify for VNC access via noVNC
 CMD fluxbox & \
-    Xvfb :0 -screen 0 1920x1080x24 & \
-    x11vnc -display :0 -nopw -forever & \
+    Xvfb :99 -screen 0 1920x1080x24 & \
+    export DISPLAY=:99 && \
+    x11vnc -display :99 -nopw -forever & \
     websockify -D --web=/usr/share/novnc/ 8080 localhost:5900 & \
     node index.js
